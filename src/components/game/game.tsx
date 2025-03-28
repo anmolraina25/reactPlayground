@@ -4,18 +4,25 @@ import { board, turn } from "../types";
 import './game.css'
 
 export default function Game() {
-    const [currentMove, setCurrentMove] = useState(0);
-    const [boardState, setBoardState] = useState(Array(9).fill([
+    const [currentMove, setCurrentMove] = useState(1);
+    const [boardState, setBoardState] = useState(Array(10).fill([
         ['', '', ''],
         ['', '', ''],
         ['', '', '']
     ] as board));
-    const currentBoardState = boardState[currentMove]
-    const userTurn: turn = (currentMove % 2 === 0) ? 'X' : 'O';
+    const currentBoardState = boardState[currentMove - 1]
+    const userTurn: turn = (currentMove % 2 === 0) ? 'O' : 'X';
+    const firstEmptyState: number = boardState.findIndex((board: board, index: number) => {
+        if (index > 0 && !boardTouched(board)) {
+            return true
+        }
+        return false
+    });
+    const boardProgress: number = firstEmptyState >= 0 ? firstEmptyState : 10
 
     function onSquareClicked(rowIndex: number, colIndex: number) {
-        const nextMove = currentMove + 1;
-        const updatedBoard = boardState[currentMove].map((boardRow: turn[], row: number) => {
+        const previousIndex = currentMove - 1;
+        const updatedBoard = boardState[previousIndex].map((boardRow: turn[], row: number) => {
             return boardRow.map((val: turn, col: number) => {
                 if (row === rowIndex && col === colIndex) {
                     return userTurn
@@ -24,16 +31,37 @@ export default function Game() {
                 }
             })
         })
+
         boardState[currentMove] = [...updatedBoard];
-        boardState[nextMove] = [...updatedBoard];
         setBoardState([...boardState]);
-        setCurrentMove(nextMove);
+        setCurrentMove(currentMove + 1);
+    }
+
+    function goToTurn(turn: number) {
+        setCurrentMove(turn + 1);
+    }
+
+    function boardTouched(board: board): boolean {
+        let result = false;
+        for (let i = 0; i < board.length; i++) {
+            const boardRow = board[i];
+            for (let j = 0; j < boardRow.length; j++) {
+                if (boardRow[j] === 'O' || boardRow[j] === 'X') {
+                    result = true;
+                    break;
+                }
+            }
+            if (result === true) {
+                break;
+            }
+        }
+        return result
     }
 
     return (
         <div className="game">
             <div className="game_part">
-                <p>Current Turn: {currentMove < 9 ? userTurn : 'Game Over'}</p>
+                <p>Current Turn: {currentMove < 10 ? userTurn : 'Game Over'}</p>
                 <Board boardData={currentBoardState} onSquareClicked={(rowIndex: number, colIndex: number) => {
                     onSquareClicked(rowIndex, colIndex)
                 }} />
@@ -41,10 +69,16 @@ export default function Game() {
             <div className="game_part">
                 <ul>
                     {
-                        Array(currentMove + 1).fill('').map((val: string, index: number) => {
+                        Array(boardProgress).fill('').map((val: string, index: number) => {
                             return (
                                 <li key={index}>
-                                    { index === 0 ? (<button>Go to Game Start</button>) : (<button>Go to move: {index}</button>) }
+                                    <button onClick={($event) => {
+                                        $event?.stopPropagation();
+                                        $event.preventDefault();
+                                        goToTurn(index);
+                                    }}>
+                                        { index === 0 ? 'Go to game start' : 'Go to move #' + index }
+                                    </button>
                                 </li>
                             )
                         })
