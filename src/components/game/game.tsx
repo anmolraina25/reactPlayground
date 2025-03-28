@@ -33,6 +33,15 @@ export default function Game() {
         })
 
         boardState[currentMove] = [...updatedBoard];
+        if (currentMove < boardProgress) {
+            for (let i = currentMove + 1; i < boardState.length; i++) {
+                boardState[i] = [
+                    ['', '', ''],
+                    ['', '', ''],
+                    ['', '', '']
+                ]
+            }
+        }
         setBoardState([...boardState]);
         setCurrentMove(currentMove + 1);
     }
@@ -77,7 +86,7 @@ export default function Game() {
                                         $event.preventDefault();
                                         goToTurn(index);
                                     }}>
-                                        { index === 0 ? 'Go to game start' : 'Go to move #' + index }
+                                        {index === 0 ? 'Go to game start' : 'Go to move #' + index}
                                     </button>
                                 </li>
                             )
